@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using WindowsDesktop.Internal;
 using WindowsDesktop.Interop;
 
 namespace WindowsDesktop
@@ -33,62 +34,49 @@ namespace WindowsDesktop
 		public static event EventHandler<VirtualDesktopChangedEventArgs> CurrentChanged;
 
 
-		private static void RegisterListener()
+		internal static IDisposable RegisterListener()
 		{
-			var service = VirtualDesktopInteropHelper.GetVirtualDesktopNotificationService();
+			var service = ComObjects.VirtualDesktopNotificationService;
 			listener = new VirtualDesktopNotificationListener();
 			dwCookie = service.Register(listener);
+
+			return Disposable.Create(() => service.Unregister(dwCookie.Value));
 		}
-
-		private static void UnregisterListener()
-		{
-			if (dwCookie == null) return;
-
-			var service = VirtualDesktopInteropHelper.GetVirtualDesktopNotificationService();
-			service.Unregister(dwCookie.Value);
-		}
-
 
 		private class VirtualDesktopNotificationListener : IVirtualDesktopNotification
 		{
 			void IVirtualDesktopNotification.VirtualDesktopCreated(IVirtualDesktop pDesktop)
 			{
-				if (Created != null) 
-                    Created.Invoke(this, FromComObject(pDesktop));
+				Created?.Invoke(this, FromComObject(pDesktop));
 			}
 
 			void IVirtualDesktopNotification.VirtualDesktopDestroyBegin(IVirtualDesktop pDesktopDestroyed, IVirtualDesktop pDesktopFallback)
 			{
 				var args = new VirtualDesktopDestroyEventArgs(FromComObject(pDesktopDestroyed), FromComObject(pDesktopFallback));
-                if (DestroyBegin != null)
-				    DestroyBegin.Invoke(this, args);
+				DestroyBegin?.Invoke(this, args);
 			}
 
 			void IVirtualDesktopNotification.VirtualDesktopDestroyFailed(IVirtualDesktop pDesktopDestroyed, IVirtualDesktop pDesktopFallback)
 			{
 				var args = new VirtualDesktopDestroyEventArgs(FromComObject(pDesktopDestroyed), FromComObject(pDesktopFallback));
-                if (DestroyFailed != null)
-				    DestroyFailed.Invoke(this, args);
+				DestroyFailed?.Invoke(this, args);
 			}
 
 			void IVirtualDesktopNotification.VirtualDesktopDestroyed(IVirtualDesktop pDesktopDestroyed, IVirtualDesktop pDesktopFallback)
 			{
 				var args = new VirtualDesktopDestroyEventArgs(FromComObject(pDesktopDestroyed), FromComObject(pDesktopFallback));
-				if (Destroyed != null)
-                    Destroyed.Invoke(this, args);
+				Destroyed?.Invoke(this, args);
 			}
 
 			void IVirtualDesktopNotification.ViewVirtualDesktopChanged(IntPtr pView)
 			{
-				if (ApplicationViewChanged != null)
-                    ApplicationViewChanged.Invoke(this, EventArgs.Empty);
+				ApplicationViewChanged?.Invoke(this, EventArgs.Empty);
 			}
 
 			void IVirtualDesktopNotification.CurrentVirtualDesktopChanged(IVirtualDesktop pDesktopOld, IVirtualDesktop pDesktopNew)
 			{
 				var args = new VirtualDesktopChangedEventArgs(FromComObject(pDesktopOld), FromComObject(pDesktopNew));
-				if (CurrentChanged != null)
-                    CurrentChanged.Invoke(this, args);
+				CurrentChanged?.Invoke(this, args);
 			}
 		}
 	}

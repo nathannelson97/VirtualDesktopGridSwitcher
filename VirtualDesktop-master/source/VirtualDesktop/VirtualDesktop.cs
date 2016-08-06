@@ -17,14 +17,14 @@ namespace WindowsDesktop
 		/// <summary>
 		/// Gets the unique identifier for the virtual desktop.
 		/// </summary>
-        public Guid Id { get; private set;  }
+		public Guid Id { get; }
 
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public IVirtualDesktop ComObject { get; private set; }
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public IVirtualDesktop ComObject => ComObjects.GetVirtualDesktop(this.Id);
 
 		private VirtualDesktop(IVirtualDesktop comObject)
 		{
-			this.ComObject = comObject;
+			ComObjects.Register(comObject);
 			this.Id = comObject.GetID();
 		}
 
@@ -34,7 +34,7 @@ namespace WindowsDesktop
 		/// </summary>
 		public void Switch()
 		{
-			ComInternal.SwitchDesktop(this.ComObject);
+			ComObjects.VirtualDesktopManagerInternal.SwitchDesktop(this.ComObject);
 		}
 
 		/// <summary>
@@ -50,9 +50,9 @@ namespace WindowsDesktop
 		/// </summary>
 		public void Remove(VirtualDesktop fallbackDesktop)
 		{
-			if (fallbackDesktop == null) throw new ArgumentNullException();
+			if (fallbackDesktop == null) throw new ArgumentNullException(nameof(fallbackDesktop));
 
-			ComInternal.RemoveDesktop(this.ComObject, fallbackDesktop.ComObject);
+			ComObjects.VirtualDesktopManagerInternal.RemoveDesktop(this.ComObject, fallbackDesktop.ComObject);
 		}
 
 		/// <summary>
@@ -63,13 +63,13 @@ namespace WindowsDesktop
 			IVirtualDesktop desktop;
 			try
 			{
-				desktop = ComInternal.GetAdjacentDesktop(this.ComObject, AdjacentDesktop.LeftDirection);
+				desktop = ComObjects.VirtualDesktopManagerInternal.GetAdjacentDesktop(this.ComObject, AdjacentDesktop.LeftDirection);
 			}
-			catch (COMException ex) // when (ex.Match(HResult.TYPE_E_OUTOFBOUNDS))
+			catch (COMException ex) when (ex.Match(HResult.TYPE_E_OUTOFBOUNDS))
 			{
 				return null;
 			}
-			var wrapper = wrappers.GetOrAdd(desktop.GetID(), _ => new VirtualDesktop(desktop));
+			var wrapper = _wrappers.GetOrAdd(desktop.GetID(), _ => new VirtualDesktop(desktop));
 
 			return wrapper;
 		}
@@ -82,13 +82,13 @@ namespace WindowsDesktop
 			IVirtualDesktop desktop;
 			try
 			{
-				desktop = ComInternal.GetAdjacentDesktop(this.ComObject, AdjacentDesktop.RightDirection);
+				desktop = ComObjects.VirtualDesktopManagerInternal.GetAdjacentDesktop(this.ComObject, AdjacentDesktop.RightDirection);
 			}
-			catch (COMException ex) //when (ex.Match(HResult.TYPE_E_OUTOFBOUNDS))
+			catch (COMException ex) when (ex.Match(HResult.TYPE_E_OUTOFBOUNDS))
 			{
 				return null;
 			}
-			var wrapper = wrappers.GetOrAdd(desktop.GetID(), _ => new VirtualDesktop(desktop));
+			var wrapper = _wrappers.GetOrAdd(desktop.GetID(), _ => new VirtualDesktop(desktop));
 
 			return wrapper;
 		}
