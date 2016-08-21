@@ -15,7 +15,7 @@ namespace WindowsDesktop
 
 			if (view == null)
 			{
-				throw new ArgumentException(nameof(hWnd));
+				throw new ArgumentException("hWnd");
 			}
 
 			return ComObjects.VirtualDesktopPinnedApps.IsViewPinned(view);
@@ -29,7 +29,7 @@ namespace WindowsDesktop
 
 			if (view == null)
 			{
-				throw new ArgumentException(nameof(hWnd));
+				throw new ArgumentException("hWnd");
 			}
 
 			if (!ComObjects.VirtualDesktopPinnedApps.IsViewPinned(view))
@@ -46,7 +46,7 @@ namespace WindowsDesktop
 
 			if (view == null)
 			{
-				throw new ArgumentException(nameof(hWnd));
+				throw new ArgumentException("hWnd");
 			}
 
 			if (ComObjects.VirtualDesktopPinnedApps.IsViewPinned(view))
@@ -63,7 +63,7 @@ namespace WindowsDesktop
 
 			if (view == null)
 			{
-				throw new ArgumentException(nameof(hWnd));
+				throw new ArgumentException("hWnd");
 			}
 
 			if (ComObjects.VirtualDesktopPinnedApps.IsViewPinned(view))
