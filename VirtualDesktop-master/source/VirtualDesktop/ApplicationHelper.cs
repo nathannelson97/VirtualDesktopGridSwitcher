@@ -15,9 +15,11 @@ namespace WindowsDesktop
 				ComObjects.ApplicationViewCollection.GetViewForHwnd(hWnd, out view);
 				return view;
 			}
-			catch (System.Runtime.InteropServices.COMException ex) when (ex.Match(HResult.TYPE_E_ELEMENTNOTFOUND))
+			catch (System.Runtime.InteropServices.COMException ex)
 			{
-				return null;
+                if (ex.Match(HResult.TYPE_E_ELEMENTNOTFOUND))
+				    return null;
+                throw;
 			}
 		}
 
@@ -27,7 +29,7 @@ namespace WindowsDesktop
 
 			if (view == null)
 			{
-				throw new ArgumentException(nameof(hWnd));
+				throw new ArgumentException("hWnd");
 			}
 
 			string appId;
