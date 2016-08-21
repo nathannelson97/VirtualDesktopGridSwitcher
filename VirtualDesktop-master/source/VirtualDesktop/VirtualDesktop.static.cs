@@ -13,24 +13,19 @@ namespace WindowsDesktop
 		private static readonly bool _isSupportedInternal = true;
 		private static readonly ConcurrentDictionary<Guid, VirtualDesktop> _wrappers = new ConcurrentDictionary<Guid, VirtualDesktop>();
 
-
 		/// <summary>
 		/// Gets a value indicating whether the operating system is support virtual desktop.
 		/// </summary>
-        public static bool IsSupported {
-            get {
+		public static bool IsSupported =>
 #if DEBUG
-                return _isSupportedInternal;
+			_isSupportedInternal;
 #else
-                return 
-                    //Environment.OSVersion.Version.Major >= 10 &&
-                    _isSupportedInternal;
+			//Environment.OSVersion.Version.Major >= 10 &&
+                        _isSupportedInternal;
 #endif
-            }
-        }
 
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public static Exception InitializationException { get; private set; }
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public static Exception InitializationException { get; }
 
 		/// <summary>
 		/// Gets the virtual desktop that is currently displayed.
@@ -127,11 +122,9 @@ namespace WindowsDesktop
 			{
 				desktop = ComObjects.VirtualDesktopManagerInternal.FindDesktop(ref desktopId);
 			}
-			catch (COMException ex)
+			catch (COMException ex) when (ex.Match(HResult.TYPE_E_ELEMENTNOTFOUND))
 			{
-				if (ex.Match(HResult.TYPE_E_ELEMENTNOTFOUND))
-				    return null;
-				throw;
+				return null;
 			}
 			var wrapper = _wrappers.GetOrAdd(desktop.GetID(), _ => new VirtualDesktop(desktop));
 
@@ -153,11 +146,9 @@ namespace WindowsDesktop
 				var desktopId = ComObjects.VirtualDesktopManager.GetWindowDesktopId(hwnd);
 				desktop = ComObjects.VirtualDesktopManagerInternal.FindDesktop(ref desktopId);
 			}
-			catch (COMException ex)
+			catch (COMException ex) when (ex.Match(HResult.REGDB_E_CLASSNOTREG, HResult.TYPE_E_ELEMENTNOTFOUND))
 			{
-				if (ex.Match(HResult.REGDB_E_CLASSNOTREG, HResult.TYPE_E_ELEMENTNOTFOUND))
-				    return null;
-				throw;
+				return null;
 			}
 			var wrapper = _wrappers.GetOrAdd(desktop.GetID(), _ => new VirtualDesktop(desktop));
 

@@ -48,10 +48,8 @@ namespace WindowsDesktop.Interop
 
 		internal static void Terminate()
 		{
-            if (_listener != null) {
-                _listener.Dispose();
-                _listenerWindow.Close();
-            }
+			_listener?.Dispose();
+			_listenerWindow?.Close();
 		}
 
 		private class ExplorerRestartListenerWindow : TransparentWindow
@@ -61,7 +59,7 @@ namespace WindowsDesktop.Interop
 
 			public ExplorerRestartListenerWindow(Action action)
 			{
-				this.Name = "ExplorerRestartListenerWindow";
+				this.Name = nameof(ExplorerRestartListenerWindow);
 				this._action = action;
 			}
 

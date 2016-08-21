@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using WindowsDesktop.Interop;
@@ -15,11 +15,9 @@ namespace WindowsDesktop
 				ComObjects.ApplicationViewCollection.GetViewForHwnd(hWnd, out view);
 				return view;
 			}
-			catch (System.Runtime.InteropServices.COMException ex)
+			catch (System.Runtime.InteropServices.COMException ex) when (ex.Match(HResult.TYPE_E_ELEMENTNOTFOUND))
 			{
-                if (ex.Match(HResult.TYPE_E_ELEMENTNOTFOUND))
-				    return null;
-                throw;
+				return null;
 			}
 		}
 
@@ -29,7 +27,7 @@ namespace WindowsDesktop
 
 			if (view == null)
 			{
-				throw new ArgumentException("hWnd");
+				throw new ArgumentException(nameof(hWnd));
 			}
 
 			string appId;

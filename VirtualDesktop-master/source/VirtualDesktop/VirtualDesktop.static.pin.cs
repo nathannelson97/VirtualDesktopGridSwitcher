@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using WindowsDesktop.Interop;
@@ -15,7 +15,7 @@ namespace WindowsDesktop
 
 			if (view == null)
 			{
-				throw new ArgumentException("hWnd");
+				throw new ArgumentException(nameof(hWnd));
 			}
 
 			return ComObjects.VirtualDesktopPinnedApps.IsViewPinned(view);
@@ -29,7 +29,7 @@ namespace WindowsDesktop
 
 			if (view == null)
 			{
-				throw new ArgumentException("hWnd");
+				throw new ArgumentException(nameof(hWnd));
 			}
 
 			if (!ComObjects.VirtualDesktopPinnedApps.IsViewPinned(view))
@@ -46,7 +46,7 @@ namespace WindowsDesktop
 
 			if (view == null)
 			{
-				throw new ArgumentException("hWnd");
+				throw new ArgumentException(nameof(hWnd));
 			}
 
 			if (ComObjects.VirtualDesktopPinnedApps.IsViewPinned(view))
@@ -63,7 +63,7 @@ namespace WindowsDesktop
 
 			if (view == null)
 			{
-				throw new ArgumentException("hWnd");
+				throw new ArgumentException(nameof(hWnd));
 			}
 
 			if (ComObjects.VirtualDesktopPinnedApps.IsViewPinned(view))
