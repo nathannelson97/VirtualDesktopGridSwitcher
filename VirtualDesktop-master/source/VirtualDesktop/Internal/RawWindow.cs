@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Interop;
@@ -12,7 +12,7 @@ namespace WindowsDesktop.Internal
 
 		public HwndSource Source { get; private set; }
 
-        public IntPtr Handle { get { return this.Source != null ? this.Source.Handle : IntPtr.Zero; } }
+		public IntPtr Handle => this.Source?.Handle ?? IntPtr.Zero;
 
 		public virtual void Show()
 		{
@@ -27,11 +27,9 @@ namespace WindowsDesktop.Internal
 
 		public virtual void Close()
 		{
-            if (this.Source != null) {
-			    this.Source.RemoveHook(this.WndProc);
-			    this.Source.Dispose();
-			    this.Source = null;
-            }
+			this.Source?.RemoveHook(this.WndProc);
+			this.Source?.Dispose();
+			this.Source = null;
 
 			NativeMethods.CloseWindow(this.Handle);
 		}
