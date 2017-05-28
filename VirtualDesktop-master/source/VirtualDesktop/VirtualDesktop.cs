@@ -17,10 +17,10 @@ namespace WindowsDesktop
 		/// <summary>
 		/// Gets the unique identifier for the virtual desktop.
 		/// </summary>
-        public Guid Id { get; private set;  }
+		public Guid Id { get; }
 
 		[EditorBrowsable(EditorBrowsableState.Never)]
-		public IVirtualDesktop ComObject { get { return ComObjects.GetVirtualDesktop(this.Id); } }
+		public IVirtualDesktop ComObject => ComObjects.GetVirtualDesktop(this.Id);
 
 		private VirtualDesktop(IVirtualDesktop comObject)
 		{
@@ -50,7 +50,7 @@ namespace WindowsDesktop
 		/// </summary>
 		public void Remove(VirtualDesktop fallbackDesktop)
 		{
-			if (fallbackDesktop == null) throw new ArgumentNullException("fallbackDesktop");
+			if (fallbackDesktop == null) throw new ArgumentNullException(nameof(fallbackDesktop));
 
 			ComObjects.VirtualDesktopManagerInternal.RemoveDesktop(this.ComObject, fallbackDesktop.ComObject);
 		}
@@ -65,11 +65,9 @@ namespace WindowsDesktop
 			{
 				desktop = ComObjects.VirtualDesktopManagerInternal.GetAdjacentDesktop(this.ComObject, AdjacentDesktop.LeftDirection);
 			}
-			catch (COMException ex)
+			catch (COMException ex) when (ex.Match(HResult.TYPE_E_OUTOFBOUNDS))
 			{
-				if (ex.Match(HResult.TYPE_E_OUTOFBOUNDS))
-				    return null;
-				throw;
+				return null;
 			}
 			var wrapper = _wrappers.GetOrAdd(desktop.GetID(), _ => new VirtualDesktop(desktop));
 
@@ -86,11 +84,9 @@ namespace WindowsDesktop
 			{
 				desktop = ComObjects.VirtualDesktopManagerInternal.GetAdjacentDesktop(this.ComObject, AdjacentDesktop.RightDirection);
 			}
-			catch (COMException ex)
+			catch (COMException ex) when (ex.Match(HResult.TYPE_E_OUTOFBOUNDS))
 			{
-				if (ex.Match(HResult.TYPE_E_OUTOFBOUNDS))
-				    return null;
-				throw;
+				return null;
 			}
 			var wrapper = _wrappers.GetOrAdd(desktop.GetID(), _ => new VirtualDesktop(desktop));
 
