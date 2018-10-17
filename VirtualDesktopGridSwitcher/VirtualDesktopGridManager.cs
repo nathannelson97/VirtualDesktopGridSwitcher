@@ -80,7 +80,7 @@ namespace VirtualDesktopGridSwitcher {
                 VirtualDesktop.CurrentChanged += VirtualDesktop_CurrentChanged;
             } catch { }
 
-            sysTrayProcess.ShowIconForDesktop(Current);
+            sysTrayProcess.ShowIconForDesktop(Current, desktopIdLookup, settings.Columns, settings.Rows, ColumnOf(Current), RowOf(Current));
 
             settings.Apply += Restart;
 
@@ -125,7 +125,7 @@ namespace VirtualDesktopGridSwitcher {
                 Debug.WriteLine("Switched to " + newDesktop);
 
                 this._current = newDesktop;
-                sysTrayProcess.ShowIconForDesktop(Current);
+                sysTrayProcess.ShowIconForDesktop(Current, desktopIdLookup, settings.Columns, settings.Rows, ColumnOf(Current), RowOf(Current));
 
                 var browserInfo = settings.GetBrowserToActivateInfo();
                 if (movingWindow == IntPtr.Zero || !IsWindowDefaultBrowser(movingWindow, browserInfo)) {
