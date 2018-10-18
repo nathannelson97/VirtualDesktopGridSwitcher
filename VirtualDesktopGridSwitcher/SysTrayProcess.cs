@@ -9,15 +9,23 @@ using System.Windows.Forms;
 using VirtualDesktopGridSwitcher.Settings;
 using WindowsDesktop;
 using System.Drawing.Imaging;
+using System.Threading;
 
 delegate bool WindowEnumCallbackProc(IntPtr hwnd, int holder);
 
 namespace VirtualDesktopGridSwitcher {
     class SysTrayProcess : IDisposable {
 
+        internal SettingValues settings;
+
         private NotifyIcon notifyIcon;
-        private HashSet<int> occupiedDesktops;
-        private Dictionary<VirtualDesktop, int> desktopIdLookup;
+        internal Dictionary<VirtualDesktop, int> desktopIdLookup;
+        private int currentDesktopIndex = 0;
+
+        private HashSet<int> occupiedDesktops = new HashSet<int>();
+        private HashSet<int> loadingOccupiedDesktops = new HashSet<int>();
+
+        private volatile bool updateThreadRunning = false;
 
         private ContextMenus contextMenu;
 
@@ -28,47 +36,23 @@ namespace VirtualDesktopGridSwitcher {
 
             contextMenu = new ContextMenus(settings);
             notifyIcon.ContextMenuStrip = contextMenu.MenuStrip;
-
-            occupiedDesktops = new HashSet<int>();
         }
 
         public void Dispose() {
             notifyIcon.Dispose();
         }
 
-
-        [DllImport("user32.dll")]
-        protected static extern bool EnumWindows(WindowEnumCallbackProc enumProc, int holder);
-
-        protected bool WindowEnumCallback(IntPtr hwnd, int holder)
+        private void RefreshIcon()
         {
-            var desktop = VirtualDesktop.FromHwnd(hwnd);
-            if (desktop != null)
-            {
-                int desktopId = desktopIdLookup[desktop];
-                occupiedDesktops.Add(desktopId);
-            }
-            return true;
-        }
-
-
-        public void ShowIconForDesktop(int desktopIndex, Dictionary<VirtualDesktop, int> desktopIdLookupIn,
-                int gridWidth, int gridHeight, int desktopCol, int desktopRow) {
-            var watch = System.Diagnostics.Stopwatch.StartNew();
-
-            occupiedDesktops.Clear();
-            desktopIdLookup = desktopIdLookupIn;
-            EnumWindows(WindowEnumCallback, 0);
-
             int lineThickness = 1;
-            int cellWidth = 4;
-            int cellLinedWidth = (cellWidth + lineThickness);
-            int iconWidth = cellLinedWidth * gridWidth + lineThickness;
-            int iconHeight = cellLinedWidth * gridHeight + lineThickness;
+            int cellSize = 4;
+            int iconWidth = cellSize * settings.Columns + 2 * lineThickness;
+            int iconHeight = cellSize * settings.Rows + 2 * lineThickness;
 
-            Bitmap bmp = new Bitmap(iconWidth, iconHeight, PixelFormat.Format24bppRgb);
+            Bitmap bmp = new Bitmap(iconWidth, iconHeight, PixelFormat.Format32bppArgb);
             using (Graphics g = Graphics.FromImage(bmp))
             {
+                // Brush brush = Brushes.DarkGray;
                 Brush brush = Brushes.White;
 
                 // Draw the outline.
@@ -77,40 +61,85 @@ namespace VirtualDesktopGridSwitcher {
                 g.FillRectangle(brush, 0, 0, iconWidth, lineThickness);
                 g.FillRectangle(brush, 0, iconHeight - lineThickness, iconWidth, lineThickness);
 
-                // Draw the grid.
-                for (int col = 1; col < gridWidth; ++col)
-                {
-                    g.FillRectangle(brush, col * cellLinedWidth, 0, lineThickness, iconHeight);
-                }
-                for (int row = 1; row < gridWidth; ++row)
-                {
-                    g.FillRectangle(brush, 0, row * cellLinedWidth, iconWidth, lineThickness);
-                }
-
-                // Fill the cell that represents the current desktop.
-                g.FillRectangle(brush, desktopCol * cellLinedWidth + lineThickness, desktopRow * cellLinedWidth + lineThickness, cellWidth, cellWidth);
-
-                brush = Brushes.Gray;
+                brush = new SolidBrush(Color.FromArgb(0xa0, 0xff, 0xff, 0xff));
 
                 // Fill (with a different color) the cells that represent desktops with windows on them.
-                for(int col = 0; col < gridWidth; ++col)
+                for (int col = 0; col < settings.Columns; ++col)
                 {
-                    for(int row = 0; row < gridHeight; ++row)
+                    for (int row = 0; row < settings.Columns; ++row)
                     {
-                        int index = (row * gridWidth) + col;
-                        if(index != desktopIndex && occupiedDesktops.Contains(index))
+                        int index = (row * settings.Columns) + col;
+                        if (index != currentDesktopIndex && occupiedDesktops.Contains(index))
                         {
-                            g.FillRectangle(brush, col * cellLinedWidth + lineThickness, row * cellLinedWidth + lineThickness, cellWidth, cellWidth);
+                            g.FillRectangle(brush, col * cellSize + lineThickness, row * cellSize + lineThickness, cellSize, cellSize);
                         }
                     }
                 }
+
+                brush = Brushes.White;
+
+                // Fill the cell that represents the current desktop.
+                g.FillRectangle(brush, ColumnOf(currentDesktopIndex) * cellSize + lineThickness, RowOf(currentDesktopIndex) * cellSize + lineThickness, cellSize, cellSize);
             }
 
             notifyIcon.Icon = Icon.FromHandle(bmp.GetHicon());
+        }
 
-            watch.Stop();
-            long elapsedMS = watch.ElapsedMilliseconds;
-            Console.WriteLine(elapsedMS);
+        public void ShowIconForDesktop(int desktopIndex)
+        {
+            currentDesktopIndex = desktopIndex;
+
+            RefreshIcon();
+
+            if (!updateThreadRunning)
+            {
+                updateThreadRunning = true;
+                // Start thread to refresh occupied desktops.
+                new Thread(() =>
+                {
+                    Thread.CurrentThread.IsBackground = true;
+
+                    RefreshOccupiedDesktops();
+
+                    updateThreadRunning = false;
+                }).Start();
+            }
+        }
+
+        private void RefreshOccupiedDesktops()
+        {
+            loadingOccupiedDesktops = new HashSet<int>();
+            EnumDesktopWindows(IntPtr.Zero, WindowEnumCallback, 0);
+            occupiedDesktops = loadingOccupiedDesktops;
+            RefreshIcon();
+        }
+
+        [DllImport("user32.dll")]
+        protected static extern bool EnumDesktopWindows(IntPtr hDesktop, WindowEnumCallbackProc enumProc, int holder);
+
+        protected bool WindowEnumCallback(IntPtr hwnd, int holder)
+        {
+            if (desktopIdLookup == null)
+            {
+                return false;
+            }
+            var desktop = VirtualDesktop.FromHwnd(hwnd);
+            if (desktop != null)
+            {
+                int desktopId = desktopIdLookup[desktop];
+                loadingOccupiedDesktops.Add(desktopId);
+            }
+            return true;
+        }
+
+        private int ColumnOf(int index)
+        {
+            return ((index + settings.Columns) % settings.Columns);
+        }
+
+        private int RowOf(int index)
+        {
+            return ((index / settings.Columns) + settings.Columns) % settings.Columns;
         }
     }
 }

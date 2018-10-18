@@ -40,6 +40,8 @@ namespace VirtualDesktopGridSwitcher {
             this.settings = settings;
             this.sysTrayProcess = sysTrayProcess;
 
+            sysTrayProcess.settings = settings;
+
             foregroundWindowChangedDelegate = new WinAPI.WinEventDelegate(ForegroundWindowChanged);
             fgWindowHook = WinAPI.SetWinEventHook(WinAPI.EVENT_SYSTEM_FOREGROUND, WinAPI.EVENT_SYSTEM_FOREGROUND, IntPtr.Zero, foregroundWindowChangedDelegate, 0, 0, WinAPI.WINEVENT_OUTOFCONTEXT);
 
@@ -72,6 +74,8 @@ namespace VirtualDesktopGridSwitcher {
                 int index = 0;
                 desktops.ToList().ForEach(d => desktopIdLookup.Add(d, index++));
 
+                sysTrayProcess.desktopIdLookup = desktopIdLookup;
+
                 this._current = desktopIdLookup[VirtualDesktop.Current];
 
                 activeWindows = new IntPtr[desktops.Length];
@@ -80,7 +84,7 @@ namespace VirtualDesktopGridSwitcher {
                 VirtualDesktop.CurrentChanged += VirtualDesktop_CurrentChanged;
             } catch { }
 
-            sysTrayProcess.ShowIconForDesktop(Current, desktopIdLookup, settings.Columns, settings.Rows, ColumnOf(Current), RowOf(Current));
+            sysTrayProcess.ShowIconForDesktop(Current);
 
             settings.Apply += Restart;
 
@@ -100,6 +104,7 @@ namespace VirtualDesktopGridSwitcher {
                 VirtualDesktop.CurrentChanged -= VirtualDesktop_CurrentChanged;
                 desktops = null;
                 desktopIdLookup = null;
+                sysTrayProcess.desktopIdLookup = null;
                 activeWindows = null;
                 lastActiveBrowserWindows = null;
             }
@@ -125,7 +130,7 @@ namespace VirtualDesktopGridSwitcher {
                 Debug.WriteLine("Switched to " + newDesktop);
 
                 this._current = newDesktop;
-                sysTrayProcess.ShowIconForDesktop(Current, desktopIdLookup, settings.Columns, settings.Rows, ColumnOf(Current), RowOf(Current));
+                sysTrayProcess.ShowIconForDesktop(Current);
 
                 var browserInfo = settings.GetBrowserToActivateInfo();
                 if (movingWindow == IntPtr.Zero || !IsWindowDefaultBrowser(movingWindow, browserInfo)) {
