@@ -48,6 +48,7 @@ namespace VirtualDesktopGridSwitcher.Settings {
             checkBoxShiftModifierMove.Checked = settings.MoveModifiers.Shift;
 
             checkBoxFKeys.Checked = settings.FKeysForNumbers;
+            checkBoxNumPadKeys.Checked = settings.NumPadKeysForNumbers;
 
             checkBoxCtrlModifierSticky.Checked = settings.StickyWindowHotKey.Modifiers.Ctrl;
             checkBoxWinModifierSticky.Checked = settings.StickyWindowHotKey.Modifiers.Win;
@@ -107,6 +108,7 @@ namespace VirtualDesktopGridSwitcher.Settings {
             settings.MoveModifiers.Shift = checkBoxShiftModifierMove.Checked;
 
             settings.FKeysForNumbers = checkBoxFKeys.Checked;
+            settings.NumPadKeysForNumbers = checkBoxNumPadKeys.Checked;
 
             settings.StickyWindowHotKey.Modifiers.Ctrl = checkBoxCtrlModifierSticky.Checked;
             settings.StickyWindowHotKey.Modifiers.Win = checkBoxWinModifierSticky.Checked;

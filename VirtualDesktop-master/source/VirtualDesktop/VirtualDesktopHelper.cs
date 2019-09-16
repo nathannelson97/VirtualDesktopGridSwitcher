@@ -24,29 +24,45 @@ namespace WindowsDesktop
 
 		public static void MoveToDesktop(IntPtr hWnd, VirtualDesktop virtualDesktop)
 		{
+			Console.WriteLine("MoveToDesktop 1");
 			ThrowIfNotSupported();
+			Console.WriteLine("MoveToDesktop 2");
 
 			int processId;
 			NativeMethods.GetWindowThreadProcessId(hWnd, out processId);
 
+			Console.WriteLine("MoveToDesktop 3");
+
 			if (Process.GetCurrentProcess().Id == processId)
 			{
+				Console.WriteLine("MoveToDesktop 4.1");
 				var guid = virtualDesktop.Id;
 				ComObjects.VirtualDesktopManager.MoveWindowToDesktop(hWnd, ref guid);
+				Console.WriteLine("MoveToDesktop 4.2");
 			}
 			else
 			{
+				Console.WriteLine("MoveToDesktop 5.1");
 				try
 				{
+					Console.WriteLine("MoveToDesktop 5.2");
 					IntPtr view;
+					Console.WriteLine("MoveToDesktop 5.3");
 					ComObjects.ApplicationViewCollection.GetViewForHwnd(hWnd, out view);
+					Console.WriteLine("MoveToDesktop 5.4");
 					ComObjects.VirtualDesktopManagerInternal.MoveViewToDesktop(view, virtualDesktop.ComObject);
+					Console.WriteLine("MoveToDesktop 5.5");
 				}
 				catch (System.Runtime.InteropServices.COMException ex)
 				{
-                    if (ex.Match(HResult.TYPE_E_ELEMENTNOTFOUND))
-					    throw new ArgumentException("hWnd");
-                    throw;
+					Console.WriteLine("MoveToDesktop 6.1");
+					if (ex.Match(HResult.TYPE_E_ELEMENTNOTFOUND))
+					{
+						Console.WriteLine("MoveToDesktop 6.2");
+						throw new ArgumentException("hWnd");
+					}
+					Console.WriteLine("MoveToDesktop 6.3");
+					throw;
 				}
 			}
 		}

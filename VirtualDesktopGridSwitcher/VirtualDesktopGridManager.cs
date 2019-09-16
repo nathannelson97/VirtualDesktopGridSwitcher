@@ -470,9 +470,23 @@ namespace VirtualDesktopGridSwitcher {
                         }
                     }
                 }
+                if (!MoveWindow(hwnd, index))
+                {
+                    //MessageBox.Show("Failed to move window to desktop " + index,
+                    //                "Warning",
+                    //                MessageBoxButtons.OK,
+                    //                MessageBoxIcon.Warning);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Failed to get foreground window",
+                                "Warning",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Warning);
             }
 
-            MoveWindow(hwnd, index);
+            
         }
 
         private bool MoveWindow(IntPtr hwnd, int index) {
@@ -494,7 +508,12 @@ namespace VirtualDesktopGridSwitcher {
                         WinAPI.SetForegroundWindow(hwnd);
                     }
                     Current = index;
-                } catch {
+                } catch (Exception ex) {
+                    MessageBox.Show("Exception caught",
+                                    "Warning",
+                                    MessageBoxButtons.OK,
+                                    MessageBoxIcon.Warning);
+                    Console.WriteLine(ex.ToString());
                     return false;
                 }
                 return true;
@@ -526,10 +545,18 @@ namespace VirtualDesktopGridSwitcher {
             RegisterMoveHotkey(Keys.Up, delegate { Move(Up); });
             RegisterMoveHotkey(Keys.Down, delegate { Move(Down); });
 
-            for (int keyNumber = 1; keyNumber <= Math.Min(DesktopCount, settings.FKeysForNumbers ?  12 : 9) ; ++keyNumber) {
+            int limit = Math.Min(DesktopCount, settings.NumPadKeysForNumbers ? 9 : settings.FKeysForNumbers ? 12 : 9);
+            String prefix = settings.NumPadKeysForNumbers ? "NumPad" : settings.FKeysForNumbers ? "F" : "D";
+
+            for (int keyNumber = 1; keyNumber <= limit ; ++keyNumber) {
                 var desktopIndex = keyNumber - 1;
+                if (settings.NumPadKeysForNumbers)
+                {
+                    desktopIndex = (2 - ((keyNumber - 1) / 3)) * 3 + ((keyNumber - 1) % 3);
+                }
+
                 Keys keycode =
-                    (Keys)Enum.Parse(typeof(Keys), (settings.FKeysForNumbers ? "F" : "D") + keyNumber.ToString());
+                    (Keys)Enum.Parse(typeof(Keys), prefix + keyNumber.ToString());
                 
                 RegisterSwitchHotkey(keycode, delegate { this.Switch(desktopIndex); });
 

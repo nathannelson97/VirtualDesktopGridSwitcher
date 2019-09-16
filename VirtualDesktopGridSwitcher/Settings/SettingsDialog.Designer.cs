@@ -36,6 +36,7 @@
             this.checkBoxAltModifierSwitch = new System.Windows.Forms.CheckBox();
             this.checkBoxWinModifierSwitch = new System.Windows.Forms.CheckBox();
             this.checkBoxFKeys = new System.Windows.Forms.CheckBox();
+            this.checkBoxNumPadKeys = new System.Windows.Forms.CheckBox();
             this.buttonApply = new System.Windows.Forms.Button();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.checkBoxWinModifierMove = new System.Windows.Forms.CheckBox();
@@ -180,6 +181,19 @@
             this.toolTipSettingsDialog.SetToolTip(this.checkBoxFKeys, "Use normal number keys or F number keys with modifiers to jump to specific deskto" +
         "p");
             this.checkBoxFKeys.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxNumPadKeys
+            // 
+            this.checkBoxNumPadKeys.AutoSize = true;
+            this.checkBoxNumPadKeys.Font = new System.Drawing.Font("Verdana", 9.75F);
+            this.checkBoxNumPadKeys.Location = new System.Drawing.Point(250, 87);
+            this.checkBoxNumPadKeys.Name = "checkBoxNumPadKeys";
+            this.checkBoxNumPadKeys.Size = new System.Drawing.Size(150, 20);
+            this.checkBoxNumPadKeys.TabIndex = 16;
+            this.checkBoxNumPadKeys.Text = "Number Pad for Numbers";
+            this.toolTipSettingsDialog.SetToolTip(this.checkBoxNumPadKeys, "Use the number pad keys to jump to " +
+                "a specific desktop. Overrides F keys option.");
+            this.checkBoxNumPadKeys.UseVisualStyleBackColor = true;
             // 
             // buttonApply
             // 
@@ -461,6 +475,7 @@
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.buttonApply);
             this.Controls.Add(this.checkBoxFKeys);
+            this.Controls.Add(this.checkBoxNumPadKeys);
             this.Controls.Add(this.checkBoxWinModifierSwitch);
             this.Controls.Add(this.checkBoxAltModifierSwitch);
             this.Controls.Add(this.checkBoxShiftModifierSwitch);
@@ -492,6 +507,7 @@
         private System.Windows.Forms.CheckBox checkBoxAltModifierSwitch;
         private System.Windows.Forms.CheckBox checkBoxWinModifierSwitch;
         private System.Windows.Forms.CheckBox checkBoxFKeys;
+        private System.Windows.Forms.CheckBox checkBoxNumPadKeys;
         private System.Windows.Forms.Button buttonApply;
         private System.Windows.Forms.Button buttonCancel;
         private System.Windows.Forms.CheckBox checkBoxWinModifierMove;

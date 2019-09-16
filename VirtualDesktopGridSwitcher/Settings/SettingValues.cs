@@ -46,6 +46,7 @@ namespace VirtualDesktopGridSwitcher.Settings {
             };
         
         public bool FKeysForNumbers = false;
+        public bool NumPadKeysForNumbers = false;
 
         public Hotkey AlwaysOnTopHotkey =
             new Hotkey {
@@ -134,8 +135,14 @@ namespace VirtualDesktopGridSwitcher.Settings {
                     MoveOnNewWindowDetectTimeoutMs = 1200;
                 }
                 SettingsVersion = 1;
-                this.Save();
             }
+            if (SettingsVersion == 1)
+            {
+                NumPadKeysForNumbers = false;
+                SettingsVersion = 2;
+            }
+
+            this.Save();
         }
 
         private static void LoadOldSettings(SettingValues settings) {
